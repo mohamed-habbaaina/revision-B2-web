@@ -1,25 +1,32 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
 import './App.css';
+import { articlesArray } from './data/articles';
+import Article from './components/Article';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const [articles, setArticles] = useState(articlesArray);
+
+    const handleArticleClick = (content) => {
+        alert(content);
+    };
+
+    return (
+        <div className="container">
+            <header className="App-header">
+                <h1>Articles</h1>
+            </header>
+            <main>
+                {articles.map((article) => (
+                    <Article
+                        className="article"
+                        key={article.id}
+                        article={article}
+                        onClick={() => handleArticleClick(article.content)}
+                    />
+                ))}
+            </main>
+        </div>
+    );
 }
 
 export default App;
