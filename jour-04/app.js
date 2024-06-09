@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('./models/User');
+const Article = require('./models/Article');
 require('dotenv').config(); // Charger les variables d'environnement depuis le fichier .env
 
 // Clé secrète pour JWT (chargée depuis les variables d'environnement)
@@ -22,6 +23,13 @@ let users = [
     new User(3, 'Moh Doe', 'moh@gmail.com', bcrypt.hashSync('1234', 10)),
     new User(4, 'Jack Doe', 'jack@gmail.com', bcrypt.hashSync('1234', 10)),
     new User(5, 'Amin Doe', 'amine@gmail.com', bcrypt.hashSync('1234', 10))
+];
+
+// Données factices d'articles pour les tests
+let articles = [
+    new Article(1, 'Article 1', 'Content of article 1', new Date(), new Date(), 1),
+    new Article(2, 'Article 2', 'Content of article 2', new Date(), new Date(), 2),
+    new Article(3, 'Article 3', 'Content of article 3', new Date(), new Date(), 3)
 ];
 
 // Middleware pour vérifier les tokens JWT
@@ -98,6 +106,60 @@ app.delete('/users/:id', authenticateToken, (req, res) => {
     users = users.filter(user => user.id !== id);
     res.sendStatus(204);
 });
+
+// Routes CRUD pour les articles
+
+// Route pour obtenir tous les articles
+app.get('/articles', authenticateToken, (req, res) => {
+    res.json(articles);
+});
+
+// Route pour obtenir un article par son ID
+app.get('/articles/:id', authenticateToken, (req, res) => {
+    const id = parseInt(req.params.id);
+    const article = articles.find(article => article.id === id);
+    if (article) {
+        res.json(article);
+    } else {
+        res.status(404).send('Article not found');
+    }
+});
+
+// Route pour créer un nouvel article
+app.post('/articles', authenticateToken, (req, res) => {
+    const { title, content } = req.body;
+    const newArticle = new Article(articles.length + 1, title, content, new Date(), new Date(), req.user.id);
+    articles.push(newArticle);
+    res.status(201).json(newArticle);
+});
+
+// Route pour mettre à jour un article existant
+app.put('/articles/:id', authenticateToken, (req, res) => {
+    const id = parseInt(req.params.id);
+    const { title, content } = req.body;
+    const articleIndex = articles.findIndex(article => article.id === id);
+    if (articleIndex !== -1 && articles[articleIndex].userId === req.user.id) {
+        articles[articleIndex].title = title;
+        articles[articleIndex].content = content;
+        articles[articleIndex].updatedAt = new Date();
+        res.json(articles[articleIndex]);
+    } else {
+        res.status(404).send('Article not found or unauthorized');
+    }
+});
+
+// Route pour supprimer un article
+app.delete('/articles/:id', authenticateToken, (req, res) => {
+    const id = parseInt(req.params.id);
+    const articleIndex = articles.findIndex(article => article.id === id);
+    if (articleIndex !== -1 && articles[articleIndex].userId === req.user.id) {
+        articles.splice(articleIndex, 1);
+        res.sendStatus(204);
+    } else {
+        res.status(404).send('Article not found or unauthorized');
+    }
+});
+
 
 // Démarrage du serveur
 const PORT = process.env.PORT || 3000;
